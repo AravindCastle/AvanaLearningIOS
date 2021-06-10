@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "310479409195",
+    "project_id": "avana-surgical-system-learning",
+    "storage_bucket": "avana-surgical-system-learning.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:310479409195:android:03b68c880c15e35e4a5a6e",
+        "android_client_info": {
+          "package_name": "com.example.avana_academy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "310479409195-verflgd0l7uds07bd572fun2i8n2bvfc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDp0XshgL2n09iiuvRIc4QyDHK-vAhavnA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "310479409195-verflgd0l7uds07bd572fun2i8n2bvfc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
