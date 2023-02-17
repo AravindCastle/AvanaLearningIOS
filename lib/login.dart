@@ -1,6 +1,7 @@
 import 'dart:ffi';
 
 import 'package:avana_academy/Utils.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,6 @@ class _LoginPageState extends State<LoginPage> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   Future<Void> handleSignIn(BuildContext context) async {
-    bool isActive = false;
     final ProgressDialog loadingPop = ProgressDialog(context,
         type: ProgressDialogType.Normal, isDismissible: false);
 
@@ -30,46 +30,36 @@ class _LoginPageState extends State<LoginPage> {
 
     if (!Utils.validateLogin(emailField.text, passwordField.text)) {
       loadingPop.hide();
-
-      scaffoldKey.currentState.showSnackBar(
-          SnackBar(content: Text('Invalid Email or Password ! ')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Invalid Email or Password !'),
+      ));
     } else {
       try {
         final SharedPreferences prefs = await SharedPreferences.getInstance();
 
         prefs.clear();
-        final QuerySnapshot userDetails = await Firestore.instance
+        final QuerySnapshot userDetails = await FirebaseFirestore.instance
             .collection('userdata')
-            .where("email", isEqualTo: emailField.text.trim())
+            .where("email", isEqualTo: emailField.text)
             .where("password", isEqualTo: passwordField.text.trim())
-            .getDocuments();
-        final List<DocumentSnapshot> documents = userDetails.documents;
+            .get();
+        final List<DocumentSnapshot> documents = userDetails.docs;
         if (documents.length > 0) {
           int membershipDate = documents[0]["membershipdate"];
           Utils.userRole = documents[0]["userrole"];
           Utils.userName = documents[0]["username"];
           Utils.userEmail = documents[0]["email"];
-          Utils.userId = documents[0].documentID;
+          Utils.userId = documents[0].id;
 
           int currDate = new DateTime.now().millisecondsSinceEpoch;
-          isActive = membershipDate - currDate > 31540000000
-              ? false
-              : documents[0]["isactive"];
+          prefs.setString("userId", Utils.userId);
+
           loadingPop.hide();
-
-          if (isActive) {
-            prefs.setString("userId", documents[0].documentID);
-            prefs.setString("name", documents[0]["username"]);
-            prefs.setInt("role", documents[0]["userrole"]);
-
-            Navigator.pushReplacementNamed(context, "/feed");
-          } else {
-            scaffoldKey.currentState
-                .showSnackBar(SnackBar(content: Text('Membership Expired ! ')));
-          }
+          Navigator.pushReplacementNamed(context, "/feed");
         } else {
-          scaffoldKey.currentState.showSnackBar(
-              SnackBar(content: Text('Invalid Email or Password ! ')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Invalid Email or Password !'),
+          ));
         }
       } catch (Exception) {
         print(Exception);
@@ -84,16 +74,37 @@ class _LoginPageState extends State<LoginPage> {
     return SafeArea(
         child: Scaffold(
             key: scaffoldKey,
-            resizeToAvoidBottomPadding: false,
+            //resizeToAvoidBottomPadding: false,
             body: Container(
-              padding: EdgeInsets.fromLTRB(20, 145, 20, 0),
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
               constraints: BoxConstraints.expand(),
-              decoration: BoxDecoration(
+              /*decoration: BoxDecoration(
                   image: DecorationImage(
                       image: Image.asset("assets/loginbg.jpg").image,
-                      fit: BoxFit.fill)),
+                      fit: BoxFit.fill)),*/
               child: Column(
                 children: [
+                  Image.asset(
+                    "assets/loginbg.jpg",
+                    width: medQry.size.width * 0.7,
+                    height: medQry.size.width * 0.3,
+                  ),
+                  Text(
+                    "Avana Surgical Systems Pvt Ltd",
+                    style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: medQry.size.height * 0.015),
+                  Text(
+                    "Orthotics Learning App",
+                    style: TextStyle(
+                        color: Colors.black87,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: medQry.size.height * 0.1),
                   TextField(
                     obscureText: false,
                     controller: emailField,

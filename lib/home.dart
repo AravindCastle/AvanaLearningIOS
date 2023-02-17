@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+//import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,7 +29,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget feedCard(BuildContext context) {
     return new StreamBuilder<QuerySnapshot>(
-      stream: Firestore.instance
+      stream: FirebaseFirestore.instance
           .collection('feed')
           .where("feedtype", isEqualTo: 0)
           .orderBy("created_time", descending: true)
@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
         if (!snapshot.hasData) return SizedBox();
         return new ListView(
           scrollDirection: Axis.horizontal,
-          children: snapshot.data.documents.map((document) {
+          children: snapshot.data.docs.map((document) {
             return Card(
               elevation: 2,
               child: new Container(
@@ -84,7 +84,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget messageCard(BuildContext context) {
     return new StreamBuilder<QuerySnapshot>(
-      stream: Firestore.instance
+      stream: FirebaseFirestore.instance
           .collection('Threads')
           .orderBy("created_time", descending: true)
           .limit(10)
@@ -94,7 +94,7 @@ class _HomePageState extends State<HomePage> {
           return SizedBox(child: new LinearProgressIndicator(), height: 5);
         return new ListView(
           scrollDirection: Axis.horizontal,
-          children: snapshot.data.documents.map((document) {
+          children: snapshot.data.docs.map((document) {
             return Card(
               elevation: 2,
               child: new Container(
@@ -147,14 +147,14 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     if (Utils.isNewResourcesAdded) {
       Utils.isNewResourcesAdded = false;
-      Fluttertoast.showToast(
+      /*Fluttertoast.showToast(
           msg: "New resources added please checkout",
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,
           timeInSecForIosWeb: 5,
           backgroundColor: Colors.red,
           textColor: Colors.white,
-          fontSize: 16.0);
+          fontSize: 16.0);*/
     }
 
     medQry = MediaQuery.of(context);
@@ -221,31 +221,27 @@ class _HomePageState extends State<HomePage> {
             items: <BottomNavigationBarItem>[
               BottomNavigationBarItem(
                 icon: Icon(Icons.home),
-                title: Text('Home'),
+                label: 'Home',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.rss_feed),
-                title: Text('Feed'),
+                label: 'Feed',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.message),
-                title: Text('Message'),
+                label: 'Message',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.image),
-                title: Text('Resources'),
+                label: 'Resources',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.supervisor_account),
-                title: Text(
-                  'Users',
-                ),
+                label: 'Users',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.verified_user),
-                title: Text(
-                  'Faculties',
-                ),
+                label: 'Faculties',
               )
             ],
             currentIndex: _selectedIndex,

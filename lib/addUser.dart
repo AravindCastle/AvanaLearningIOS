@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:progress_dialog/progress_dialog.dart';
+import 'Utils.dart';
 
 bool isActive = true;
 String userRole = "3";
@@ -21,7 +22,7 @@ class _AddUserPageState extends State<AddUserPage> {
   TextEditingController password = new TextEditingController();
   TextEditingController description = new TextEditingController();
 
-  TextEditingController hospital = new TextEditingController();
+  //TextEditingController hospital = new TextEditingController();
 
   TextEditingController city = new TextEditingController();
   String region = "north";
@@ -48,10 +49,11 @@ class _AddUserPageState extends State<AddUserPage> {
   }
 
   Future<void> _pickImage() async {
-    File selectedFile = await FilePicker.getFile(type: FileType.image);
+    FilePickerResult selectedFile =
+        await FilePicker.platform.pickFiles(type: FileType.image);
     if (selectedFile != null && this.mounted) {
       setState(() {
-        profilePic = selectedFile;
+        profilePic = File(selectedFile.files.first.path);
       });
     }
   }
@@ -73,15 +75,11 @@ class _AddUserPageState extends State<AddUserPage> {
         uploadingPop.show();
         String profile_pic_url = null;
         if (profilePic != null) {
-          StorageReference storageReference = FirebaseStorage.instance
-              .ref()
-              .child(
-                  'AvanaFiles/profilepics/' + profilePic.path.split("/").last);
-          StorageUploadTask uploadTask = storageReference.putFile(profilePic);
-          await uploadTask.onComplete;
-          profile_pic_url = await storageReference.getDownloadURL();
+          profile_pic_url = await Utils.uploadImageGetUrl(
+              'AvanaFiles/profilepics/' + profilePic.path.split("/").last,
+              profilePic);
         }
-        await Firestore.instance.collection("userdata").add({
+        await FirebaseFirestore.instance.collection("userdata").add({
           "username": userName.text,
           "email": emailId.text,
           "password": password.text,
@@ -89,7 +87,7 @@ class _AddUserPageState extends State<AddUserPage> {
           "userrole": int.parse(userRole),
           "membershipdate": new DateTime.now().millisecondsSinceEpoch,
           "description": description.text,
-          "hospital": hospital.text,
+          //  "hospital": hospital.text,
           "city": city.text,
           "region": region,
           "profile_pic_url": profile_pic_url,
@@ -181,14 +179,14 @@ class _AddUserPageState extends State<AddUserPage> {
                             contentPadding:
                                 EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
                             labelText: "Password")),
-                    SizedBox(height: 10),
+                    /*SizedBox(height: 10),
                     TextField(
                         controller: hospital,
                         decoration: InputDecoration(
                             border: OutlineInputBorder(),
                             contentPadding:
                                 EdgeInsets.fromLTRB(20.0, 15.0, 20.0, 15.0),
-                            labelText: "Hospital Name")),
+                            labelText: "Hospital Name")),*/
                     SizedBox(height: 10),
                     TextField(
                         controller: city,
@@ -272,7 +270,7 @@ class _AddUserPageState extends State<AddUserPage> {
                       ),
                     ),
                     ListTile(
-                      title: new Text('Faculty'),
+                      title: new Text(Utils.distributorName),
                       leading: Radio(
                         value: "2",
                         groupValue: userRole,

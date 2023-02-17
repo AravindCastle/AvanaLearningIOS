@@ -1,3 +1,2 @@
 # avana_academy
 
-# AvanaLearningIOS

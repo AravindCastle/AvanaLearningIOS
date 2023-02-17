@@ -56,9 +56,9 @@ class _MessagePageState extends State<MessagePage> {
               )
             : SizedBox(),
         Spacer(),
-        Utils.threadCount.containsKey(messageDoc.documentID)
+        Utils.threadCount.containsKey(messageDoc.id)
             ? Text(
-                Utils.threadCount[messageDoc.documentID].toString() +
+                Utils.threadCount[messageDoc.id].toString() +
                     " "
                         "Comment",
                 style: TextStyle(fontSize: 14),
@@ -69,13 +69,13 @@ class _MessagePageState extends State<MessagePage> {
           child: Card(
               elevation: 1,
               child: new Container(
-                height: 190,
+                height: messageDoc["attachments"].length > 0 ? 190 : 140,
                 child: new Padding(
                     padding:
                         EdgeInsets.only(top: 10, bottom: 10, left: 8, right: 8),
                     child: new Column(children: [
                       Row(children: [
-                        Utils.isNewMessage(messageDoc.documentID, prefs),
+                        Utils.isNewMessage(messageDoc.id, prefs),
                         SizedBox(
                           width: 30,
                           child: Icon(
@@ -88,7 +88,7 @@ class _MessagePageState extends State<MessagePage> {
                         ),
                         SizedBox(
                           width: medQry.size.width * .62,
-                          child: Text(messageDoc["ownername"],
+                          child: Text(messageDoc["ownername"] ?? '',
                               overflow: TextOverflow.fade,
                               softWrap: false,
                               style:
@@ -97,7 +97,7 @@ class _MessagePageState extends State<MessagePage> {
                         SizedBox(
                           width: medQry.size.width * .19,
                           child: Text(
-                            Utils.getTimeFrmt(messageDoc["created_time"]),
+                            Utils.getTimeFrmt(messageDoc["created_time"]) ?? '',
                             overflow: TextOverflow.ellipsis,
                             softWrap: true,
                             textAlign: TextAlign.right,
@@ -115,7 +115,7 @@ class _MessagePageState extends State<MessagePage> {
                           SizedBox(
                             width: medQry.size.width * .89,
                             child: Text(
-                              messageDoc["subject"],
+                              messageDoc["subject"] ?? '',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               softWrap: true,
@@ -127,17 +127,21 @@ class _MessagePageState extends State<MessagePage> {
                       ),
                       Row(
                         children: [
-                          Container(
-                            padding: EdgeInsets.fromLTRB(6, 8, 0, 5),
-                            child: Utils.attachmentPreviewSlider(
-                                context,
-                                messageDoc["attachments"].length > 0
-                                    ? messageDoc
-                                    : null,
-                                messageDoc["subject"]),
-                            height: 100,
-                            width: 120,
-                          ),
+                          messageDoc["attachments"].length > 0
+                              ? Container(
+                                  padding: EdgeInsets.fromLTRB(6, 8, 0, 5),
+                                  child: Utils.attachmentPreviewSlider(
+                                      context,
+                                      messageDoc["attachments"].length > 0
+                                          ? messageDoc
+                                          : null,
+                                      messageDoc["subject"]),
+                                  height: 100,
+                                  width: 120,
+                                )
+                              : SizedBox(
+                                  width: 0,
+                                ),
                           SizedBox(
                             width: 10,
                           ),
@@ -145,7 +149,7 @@ class _MessagePageState extends State<MessagePage> {
                               width: 200,
                               height: 70,
                               child: Text(
-                                messageDoc["content"],
+                                messageDoc["content"] ?? '',
                                 maxLines: 3,
                               ))
                         ],
@@ -165,7 +169,7 @@ class _MessagePageState extends State<MessagePage> {
               showSearchBar = false;
             });
             Navigator.pushNamed(context, "/messageview",
-                arguments: messageDoc.documentID);
+                arguments: messageDoc.id);
           });
     } else {
       return SizedBox();
@@ -249,7 +253,7 @@ class _MessagePageState extends State<MessagePage> {
                   )),
               Expanded(
                   child: new StreamBuilder<QuerySnapshot>(
-                stream: Firestore.instance
+                stream: FirebaseFirestore.instance
                     .collection('Threads')
                     .orderBy("created_time", descending: true)
                     .limit(showSearchBar ? 1000 : 200)
@@ -258,10 +262,15 @@ class _MessagePageState extends State<MessagePage> {
                     AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (!snapshot.hasData)
                     return SizedBox(
-                        child: new LinearProgressIndicator(), height: 5);
+                        child: Text(
+                          "Loading ....",
+                          style: TextStyle(fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                        height: 5);
                   return new ListView(
                     controller: _scrollController,
-                    children: snapshot.data.documents.map((document) {
+                    children: snapshot.data.docs.map((document) {
                       return messageItem(document, context);
                     }).toList(),
                   );

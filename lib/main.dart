@@ -2,8 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:avana_academy/MessageEditor.dart';
 import 'package:avana_academy/editUser.dart';
-import 'package:avana_academy/facultyDetails.dart';
-import 'package:avana_academy/facultyList.dart';
+
 import 'package:avana_academy/feed.dart';
 import 'package:avana_academy/feedDetails.dart';
 import 'package:avana_academy/feedEditor.dart';
@@ -20,18 +19,28 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:flare_splash_screen/flare_splash_screen.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
+//import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'Utils.dart';
 import 'addUser.dart';
 import 'login.dart';
 
-void main() => runApp(AvanaHome());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await FlutterDownloader.initialize(
+      debug:
+          true // optional: set to false to disable printing logs to console (default: true)
+      );
+  runApp(AvanaHome());
+}
 
 class AvanaHome extends StatelessWidget {
   // This widget is the root of your application.
@@ -102,21 +111,6 @@ class AvanaHome extends StatelessWidget {
       case '/gallery':
         return PageTransition(
             child: GalleryPage(),
-            type: PageTransitionType.fade,
-            settings: settings);
-      case '/facultyPage':
-        return PageTransition(
-            child: facultyListPage(),
-            type: PageTransitionType.fade,
-            settings: settings);
-      case '/facultyDetail':
-        Map<dynamic, dynamic> arguments = settings.arguments;
-
-        String userID = arguments["userid"];
-        return PageTransition(
-            child: FacultyDetailsPage(
-              currentUserId: userID,
-            ),
             type: PageTransitionType.fade,
             settings: settings);
       case '/feed':
@@ -209,14 +203,14 @@ class BackgroundNotify {
       Map<String, dynamic> message) {
     if (message["data"]["screen"] == "resource" &&
         Utils.userId != message["data"]["ownerId"]) {
-      Fluttertoast.showToast(
+      /*.showToast(
           msg: "New resources added please checkout",
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.BOTTOM,
           timeInSecForIosWeb: 3,
           backgroundColor: Colors.red,
           textColor: Colors.white,
-          fontSize: 16.0);
+          fontSize: 16.0);*/
     } else if ("messageview" == message["data"]["screen"]) {
       Utils.addNotificationId(
           message["data"]["docid"], message["data"]["ownerId"]);
@@ -236,7 +230,7 @@ class AvanaHomePage extends StatefulWidget {
 
 class _AvanaHomePageState extends State<AvanaHomePage> {
   bool isUserLogged = false;
-  final FirebaseMessaging _fcm = FirebaseMessaging();
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   StreamSubscription iosSubscription;
 
   @override
@@ -244,98 +238,90 @@ class _AvanaHomePageState extends State<AvanaHomePage> {
     // TODO: implement initState
     super.initState();
     checkUserLogged();
-    _fcm.subscribeToTopic(Utils.notifyTopic);
-    if (Platform.isIOS) {
-      iosSubscription = _fcm.onIosSettingsRegistered.listen((data) {
-        // save the token  OR subscribe to a topic here
-      });
-
-      _fcm.requestNotificationPermissions(IosNotificationSettings());
+    if (false) {
+      return;
     }
-    _fcm.configure(
-      onMessage: (Map<String, dynamic> message) async {
-        if (this.mounted) {
-          setState(() {
-            if (message["data"]["screen"] == "resource" &&
-                Utils.userId != message["data"]["ownerId"]) {
-              Fluttertoast.showToast(
-                  msg: "New resources added please checkout",
-                  toastLength: Toast.LENGTH_LONG,
-                  gravity: ToastGravity.BOTTOM,
-                  timeInSecForIosWeb: 3,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                  fontSize: 16.0);
-            } else if ("messageview" == message["data"]["screen"]) {
-              Utils.addNotificationId(
-                  message["data"]["docid"], message["data"]["ownerId"]);
-            }
-          });
-        }
-      },
-      onLaunch: (Map<String, dynamic> message) async {
-        if (this.mounted) {
-          setState(() {
-            if (message["data"]["screen"] == "resource") {
-              Utils.isNewResourcesAdded = true;
-              Fluttertoast.showToast(
-                  msg: "New resources added please checkout",
-                  toastLength: Toast.LENGTH_LONG,
-                  gravity: ToastGravity.BOTTOM,
-                  timeInSecForIosWeb: 3,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                  fontSize: 16.0);
-            } else if ("messageview" == message["data"]["screen"]) {
-              Utils.addNotificationId(
-                  message["data"]["docid"], message["data"]["ownerId"]);
-            }
-          });
-        }
-      },
-      onResume: (Map<String, dynamic> message) async {
-        if (this.mounted) {
-          setState(() {
-            if (message["data"]["screen"] == "resource") {
-              Utils.isNewResourcesAdded = true;
-              Fluttertoast.showToast(
-                  msg: "New resources added please checkout",
-                  toastLength: Toast.LENGTH_LONG,
-                  gravity: ToastGravity.BOTTOM,
-                  timeInSecForIosWeb: 3,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                  fontSize: 16.0);
-            } else if ("messageview" == message["data"]["screen"]) {
-              Utils.addNotificationId(
-                  message["data"]["docid"], message["data"]["ownerId"]);
-            }
-          });
-        }
-      },
-    );
+    _fcm.subscribeToTopic(Utils.notifyTopic);
+
+    if (Platform.isIOS) {
+      NotificationSettings settings = null;
+      _fcm
+          .requestPermission(
+            alert: true,
+            announcement: false,
+            badge: true,
+            carPlay: false,
+            criticalAlert: false,
+            provisional: false,
+            sound: true,
+          )
+          .then((value) => settings = value);
+    }
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+      if (this.mounted) {
+        setState(() {
+          if (message.data["screen"] == "resource" &&
+              Utils.userId != message.data["ownerId"]) {
+            /*Fluttertoast.showToast(
+                msg: "New resources added please checkout",
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.BOTTOM,
+                timeInSecForIosWeb: 3,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 16.0);*/
+          } else if ("messageview" == message.data["screen"]) {
+            Utils.addNotificationId(
+                message.data["docid"], message.data["ownerId"]);
+          }
+        });
+      }
+    });
+
+    /*FirebaseMessaging.onBackgroundMessage(
+        (message) => BackgroundNotify.myBackgroundMessageHandler(message.data));
+      */
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      if (this.mounted) {
+        setState(() {
+          if (message.data["screen"] == "resource" &&
+              Utils.userId != message.data["ownerId"]) {
+            /*.showToast(
+                msg: "New resources added please checkout",
+                toastLength: Toast.LENGTH_LONG,
+                gravity: ToastGravity.BOTTOM,
+                timeInSecForIosWeb: 3,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 16.0);*/
+          } else if ("messageview" == message.data["screen"]) {
+            Utils.addNotificationId(
+                message.data["docid"], message.data["ownerId"]);
+          }
+        });
+      }
+    });
   }
 
   void checkUserLogged() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-	if (prefs.containsKey('userId')) {
+    if (prefs.containsKey('userId')) {
       String userId = prefs.getString("userId");
-      DocumentSnapshot userDetails = await Firestore.instance
+      DocumentSnapshot userDetails = await FirebaseFirestore.instance
           .collection('userdata')
-          .document(userId)
+          .doc(userId)
           .get();
-      if (userDetails.data.length > 0) {
+      if (userDetails.data() != null) {
         Utils.getAllUsersProfilePics();
-        bool activeState = userDetails.data["isactive"];
-        int membershipDate = userDetails.data["membershipdate"];
+        bool activeState = userDetails.get("isactive");
+        int membershipDate = userDetails.get("membershipdate");
         int currDate = new DateTime.now().millisecondsSinceEpoch;
-        Utils.userRole = userDetails.data["userrole"];
-        Utils.userName = userDetails.data["username"];
-        Utils.userEmail = userDetails.data["email"];
+        Utils.userRole = userDetails.get("userrole");
+        Utils.userName = userDetails.get("username");
+        Utils.userEmail = userDetails.get("email");
         Utils.userId = userId;
 
-        isUserLogged =
-            (currDate - membershipDate) > 31540000000 ? false : activeState;
+        isUserLogged = true;
       }
     }
     if (!isUserLogged) {

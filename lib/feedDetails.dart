@@ -27,26 +27,24 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
   BuildContext commonContext = null;
 
   Future<void> _addImage() async {
-    File selectedFile = await FilePicker.getFile(type: FileType.image);
+    FilePickerResult selectedFile =
+        await FilePicker.platform.pickFiles(type: FileType.image);
     if (selectedFile != null && this.mounted) {
       Utils.showLoadingPop(commonContext);
       final SharedPreferences localStore =
           await SharedPreferences.getInstance();
       List<Map> fileUrls = new List();
       String folderId = threadDetails["folderid"];
-      String fileName = selectedFile.path.split("/").last;
-      StorageReference storageReference = FirebaseStorage.instance
-          .ref()
-          .child('AvanaFiles/' + folderId + '/' + fileName);
-      StorageUploadTask uploadTask = storageReference.putFile(selectedFile);
-      await uploadTask.onComplete;
-      fileUrls.add({
-        "url": await storageReference.getDownloadURL(),
-        "name": fileName,
-        "type": fileName.split(".").last
-      });
+      String fileName = selectedFile.files.first.path.split("/").last;
 
-      await Firestore.instance.collection("feedcomments").add({
+      String fileUrl = await Utils.uploadImageGetUrl(
+          'AvanaFiles/' + folderId + '/' + fileName,
+          File(selectedFile.files.first.path));
+
+      fileUrls.add(
+          {"url": fileUrl, "name": fileName, "type": fileName.split(".").last});
+
+      await FirebaseFirestore.instance.collection("feedcomments").add({
         "comment": "",
         "created_time": new DateTime.now().millisecondsSinceEpoch,
         "owner": localStore.getString("userId"),
@@ -67,7 +65,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
       isCommentSaved = false;
       final SharedPreferences localStore =
           await SharedPreferences.getInstance();
-      await Firestore.instance.collection("feedcomments").add({
+      await FirebaseFirestore.instance.collection("feedcomments").add({
         "comment": commentEditor.text,
         "created_time": new DateTime.now().millisecondsSinceEpoch,
         "owner": localStore.getString("userId"),
@@ -90,13 +88,13 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
   }
 
   Future<void> getComments() async {
-    final QuerySnapshot userDetails = await Firestore.instance
+    final QuerySnapshot userDetails = await FirebaseFirestore.instance
         .collection('feedcomments')
         //  .orderBy("comments")
         .where("feed_id", isEqualTo: threadID)
         .orderBy("created_time", descending: true)
-        .getDocuments();
-    commentsDoc = userDetails.documents;
+        .get();
+    commentsDoc = userDetails.docs;
     if (this.mounted) {
       setState(() {
         isCmntLoading = false;
@@ -276,7 +274,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
                 right: medQry.size.width * .02,
                 top: medQry.size.width * .05),
             child: Text(
-              "\t\t\t\t" + threadDetails["content"],
+              "      " + threadDetails["content"],
               style: TextStyle(fontSize: 17),
             ))
       ],
@@ -314,9 +312,12 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
   }
 
   void deleteComment(String commentId) {
-    Firestore.instance.collection('feedcomments').document(commentId).delete();
+    FirebaseFirestore.instance
+        .collection('feedcomments')
+        .doc(commentId)
+        .delete();
     setState(() {
-      Utils.updateFeedCommentCount(threadDetails.documentID, false);
+      Utils.updateFeedCommentCount(threadDetails.id, false);
     });
 
     Navigator.of(context).pop();
@@ -363,7 +364,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
                       ? Container(
                           width: medQry.size.width * .29,
                           height: medQry.size.width * .29,
-                          child: OutlineButton(
+                          child: OutlinedButton(
                             child: Material(
                               child: CachedNetworkImage(
                                 width: medQry.size.width * .29,
@@ -391,10 +392,11 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
                                         ["name"]
                                   });
                             },
-                            shape: new RoundedRectangleBorder(
-                                borderRadius: new BorderRadius.circular(8.0)),
-                            borderSide: BorderSide(color: Colors.grey),
-                            padding: EdgeInsets.all(0),
+                            style: OutlinedButton.styleFrom(
+                                shape: new RoundedRectangleBorder(
+                                    borderRadius:
+                                        new BorderRadius.circular(8.0)),
+                                side: BorderSide(color: Colors.grey)),
                           ),
                           margin: EdgeInsets.only(
                               left: medQry.size.width * .03,
@@ -487,7 +489,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
     Utils.removeNotifyItem(threadID);
     getComments();
     threadDetails =
-        await Firestore.instance.collection('feed').document(threadID).get();
+        await FirebaseFirestore.instance.collection('feed').doc(threadID).get();
     if (this.mounted) {
       setState(() {
         isLoading = false;
@@ -499,20 +501,20 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
     List<dynamic> attachmentList = threadDetails["attachments"];
     for (int i = 0; i < attachmentList.length; i++) {
       try {
-        StorageReference storageReference = await FirebaseStorage.instance
-            .getReferenceFromUrl(attachmentList[i]["url"]);
+        Reference storageReference = await FirebaseStorage.instance
+            .refFromURL((attachmentList[i]["url"]));
         storageReference.delete();
       } catch (e) {}
     }
     for (int i = 0; i < commentsDoc.length; i++) {
-      Firestore.instance
+      FirebaseFirestore.instance
           .collection('feedcomments')
-          .document(commentsDoc[i].documentID)
+          .doc(commentsDoc[i].id)
           .delete();
     }
-      Navigator.pushReplacementNamed(context, "/feed");
-  
-  Firestore.instance.collection('feed').document(threadId).delete();
+    Navigator.of(context).pop();
+    Navigator.of(context).pop();
+    FirebaseFirestore.instance.collection('feed').doc(threadId).delete();
   }
 
   void deleteAlert(BuildContext context) {
@@ -561,7 +563,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
       appBar: AppBar(
         title: isLoading ? Text("") : buildMessageInfo(),
         actions: <Widget>[
-          (!isLoading && (userId == threadDetails['owner'] || userRole == 1))
+          (!isLoading && (userRole == 1))
               ? IconButton(
                   icon: Icon(Icons.delete),
                   onPressed: () {
@@ -594,11 +596,7 @@ class _FeedDetailScreenState extends State<FeedDetailScreen> {
                         reverse: false,
                       ),
                     ),
-                    (userRole == 1 ||
-                            userRole == 2 ||
-                            userId == threadDetails["owner"])
-                        ? buildInput()
-                        : SizedBox(height: 10),
+                    (userRole == 1) ? buildInput() : SizedBox(height: 10),
                   ],
                 ),
               ],

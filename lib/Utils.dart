@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+//import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 import 'package:youtube_parser/youtube_parser.dart';
 
 class Utils {
@@ -30,7 +31,7 @@ class Utils {
   static Map<String, int> threadCount = new Map();
 
   static Map<String, int> feedCommentCount = new Map();
-
+  static String distributorName = "Distributor";
   static Map<String, String> userProfilePictures = new Map();
   static const String notifyTopic = "beta";
   static bool getImageFormats(String isSupported) {
@@ -132,7 +133,7 @@ class Utils {
     timeStr += amPm;
 
     dateMonth += dt.day < 10 ? "0" + dt.day.toString() : dt.day.toString();
-	dateMonth +=" "+  monthMap[dt.month.toString()];
+    dateMonth += " " + monthMap[dt.month.toString()];
 
     if (dt.year == todat.year &&
         dt.day == todat.day &&
@@ -163,43 +164,44 @@ class Utils {
       return Container(
         width: medQry.size.width * .29,
         height: medQry.size.width * .29,
-        child: OutlineButton(
-          child: Material(
-            child: attach == null
-                ? CachedNetworkImage(
-                    width: medQry.size.width * .29,
-                    height: medQry.size.width * .29,
-                    fit: BoxFit.contain,
-                    progressIndicatorBuilder: (context, url, progress) =>
-                        Image.asset(
-                      "assets/imagethumbnail.png",
+        child: OutlinedButton(
+            child: Material(
+              child: attach == null
+                  ? CachedNetworkImage(
                       width: medQry.size.width * .29,
                       height: medQry.size.width * .29,
+                      fit: BoxFit.contain,
+                      progressIndicatorBuilder: (context, url, progress) =>
+                          Image.asset(
+                        "assets/imagethumbnail.png",
+                        width: medQry.size.width * .29,
+                        height: medQry.size.width * .29,
+                      ),
+                      imageUrl: url,
+                    )
+                  : Image.file(
+                      attach,
+                      width: medQry.size.width * .29,
+                      height: medQry.size.width * .29,
+                      fit: BoxFit.cover,
                     ),
-                    imageUrl: url,
-                  )
-                : Image.file(
-                    attach,
-                    width: medQry.size.width * .29,
-                    height: medQry.size.width * .29,
-                    fit: BoxFit.cover,
-                  ),
-            borderRadius: BorderRadius.all(
-              Radius.circular(8.0),
+              borderRadius: BorderRadius.all(
+                Radius.circular(8.0),
+              ),
+              clipBehavior: Clip.hardEdge,
             ),
-            clipBehavior: Clip.hardEdge,
-          ),
-          onPressed: attach != null
-              ? null
-              : () {
-                  Navigator.pushNamed(context, "/photoview",
-                      arguments: {"url": url, "name": name});
-                },
-          shape: new RoundedRectangleBorder(
-              borderRadius: new BorderRadius.circular(8.0)),
-          borderSide: BorderSide(color: Colors.grey),
-          padding: EdgeInsets.all(0),
-        ),
+            onPressed: attach != null
+                ? null
+                : () {
+                    Navigator.pushNamed(context, "/photoview",
+                        arguments: {"url": url, "name": name});
+                  },
+            style: OutlinedButton.styleFrom(
+              shape: new RoundedRectangleBorder(
+                  borderRadius: new BorderRadius.circular(8.0)),
+              side: BorderSide(color: Colors.grey),
+              padding: EdgeInsets.all(0),
+            )),
         margin: EdgeInsets.only(
             left: medQry.size.width * .03, top: medQry.size.width * .03),
       );
@@ -207,27 +209,28 @@ class Utils {
       return Container(
         width: medQry.size.width * .29,
         height: medQry.size.width * .29,
-        child: OutlineButton(
-          child: Material(
-            child: Image.asset(
-              "assets/videothumbnail.png",
-              width: medQry.size.width * .29,
-              height: medQry.size.width * .29,
-              fit: BoxFit.cover,
+        child: OutlinedButton(
+            child: Material(
+              child: Image.asset(
+                "assets/videothumbnail.png",
+                width: medQry.size.width * .29,
+                height: medQry.size.width * .29,
+                fit: BoxFit.cover,
+              ),
+              borderRadius: BorderRadius.all(
+                Radius.circular(8.0),
+              ),
+              clipBehavior: Clip.hardEdge,
             ),
-            borderRadius: BorderRadius.all(
-              Radius.circular(8.0),
-            ),
-            clipBehavior: Clip.hardEdge,
-          ),
-          onPressed: () {
-            openFile(url, name, context);
-          },
-          shape: new RoundedRectangleBorder(
-              borderRadius: new BorderRadius.circular(8.0)),
-          borderSide: BorderSide(color: Colors.grey),
-          padding: EdgeInsets.all(0),
-        ),
+            onPressed: () {
+              openFile(url, name, context);
+            },
+            style: OutlinedButton.styleFrom(
+              shape: new RoundedRectangleBorder(
+                  borderRadius: new BorderRadius.circular(8.0)),
+              side: BorderSide(color: Colors.grey),
+              padding: EdgeInsets.all(0),
+            )),
         margin: EdgeInsets.only(
             left: medQry.size.width * .03, top: medQry.size.width * .03),
       );
@@ -235,10 +238,13 @@ class Utils {
       return Container(
         height: medQry.size.width * .29,
         width: medQry.size.width * .29,
-        child: OutlineButton(
-          shape: new RoundedRectangleBorder(
-              borderRadius: new BorderRadius.circular(8.0)),
-          borderSide: BorderSide(color: Colors.grey),
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            shape: new RoundedRectangleBorder(
+                borderRadius: new BorderRadius.circular(8.0)),
+            padding: EdgeInsets.all(0),
+            side: BorderSide(color: Colors.grey),
+          ),
           child: Material(
             child: Text(type, style: TextStyle(fontSize: 15)),
             borderRadius: BorderRadius.all(
@@ -249,7 +255,6 @@ class Utils {
           onPressed: () {
             openFile(url, name, context);
           },
-          padding: EdgeInsets.all(0),
         ),
         margin: EdgeInsets.only(
             left: medQry.size.width * .03, top: medQry.size.width * .03),
@@ -385,7 +390,7 @@ static void openFile(File file,String url){
     String serverToken =
         "AAAA7_Sx8pg:APA91bE1afmUpIcNCCe9leKNrNOHut5JajyvKmUBRKxdfELopzap3XJaHw4Ih_Cj6EzebCGi8QeSA_m6kXIvRq4WiGiqDYj7c-G8YklDX9feOm1eusmN0eIPa914m4APgLVC5Iqx96Nw";
     await http.post(
-      'https://fcm.googleapis.com/fcm/send',
+      Uri(host: 'https://fcm.googleapis.com/fcm/send'),
       headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': 'key=$serverToken',
@@ -414,7 +419,7 @@ static void openFile(File file,String url){
         return "Admin";
         break;
       case "2":
-        return "Faculty";
+        return "Distributor";
         break;
       case "3":
         return "Member";
@@ -490,18 +495,18 @@ static void openFile(File file,String url){
   }
 
   static void showImageUploadingStatus(
-      BuildContext context, StorageUploadTask uploadTask, String text) {
+      BuildContext context, UploadTask uploadTask, String text) {
     showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) {
           return StatefulBuilder(builder: (context, popState) {
             double loadingValue = 0;
-            uploadTask.events.listen((event) {
+            uploadTask.snapshotEvents.listen((event) {
               popState(() {
                 loadingValue = 100 *
-                    (uploadTask.lastSnapshot.bytesTransferred /
-                        uploadTask.lastSnapshot.totalByteCount);
+                    (uploadTask.snapshot.bytesTransferred /
+                        uploadTask.snapshot.totalBytes);
                 print(loadingValue);
               });
             }).onError((handleError) {
@@ -770,13 +775,10 @@ static void openFile(File file,String url){
   }
 
   static Future<void> _launchInBrowser(String url) async {
-    if (await canLaunch(url)) {
-      await launch(
-        url,
-        forceSafariVC: false,
-        forceWebView: false,
-      );
-    } else {
+    if (!await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    )) {
       throw 'Could not launch $url';
     }
   }
@@ -785,8 +787,8 @@ static void openFile(File file,String url){
     threadCount = new Map();
     List<DocumentSnapshot> commentsDoc = null;
     final QuerySnapshot userDetails =
-        await Firestore.instance.collection('comments').getDocuments();
-    commentsDoc = userDetails.documents;
+        await FirebaseFirestore.instance.collection('comments').get();
+    commentsDoc = userDetails.docs;
 
     if (commentsDoc != null && commentsDoc.length > 0) {
       for (int i = 0; i < commentsDoc.length; i++) {
@@ -818,8 +820,8 @@ static void openFile(File file,String url){
     feedCommentCount = new Map();
     List<DocumentSnapshot> commentsDoc = null;
     final QuerySnapshot userDetails =
-        await Firestore.instance.collection('feedcomments').getDocuments();
-    commentsDoc = userDetails.documents;
+        await FirebaseFirestore.instance.collection('feedcomments').get();
+    commentsDoc = userDetails.docs;
 
     if (commentsDoc != null && commentsDoc.length > 0) {
       for (int i = 0; i < commentsDoc.length; i++) {
@@ -859,14 +861,15 @@ static void openFile(File file,String url){
           arguments: {"superLevel": 0, "parentid": "0", "title": "Resources"});
     } else if (selectedIndex == 3) {
       Navigator.pushReplacementNamed(context, "/userlist");
-    } else if (selectedIndex == 4) {
-      Navigator.pushReplacementNamed(context, "/facultyPage");
     }
+    /*else if (selectedIndex == 4) {
+      Navigator.pushReplacementNamed(context, "/facultyPage");
+    }*/
   }
 
   static pushFeed(String content, int feedType) async {
     final SharedPreferences localStore = await SharedPreferences.getInstance();
-    Firestore.instance.collection("feed").add({
+    FirebaseFirestore.instance.collection("feed").add({
       "content": content,
       "owner": localStore.getString("userId"),
       "ownername": localStore.getString("name"),
@@ -888,31 +891,32 @@ static void openFile(File file,String url){
           attach.add(Container(
             width: 100,
             height: 100,
-            child: OutlineButton(
-              child: Material(
-                child: CachedNetworkImage(
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.fill,
-                  progressIndicatorBuilder: (context, url, progress) =>
-                      Image.asset(
-                    "assets/imagethumbnail.png",
+            child: OutlinedButton(
+                child: Material(
+                  child: CachedNetworkImage(
                     width: 100,
                     height: 100,
+                    fit: BoxFit.fill,
+                    progressIndicatorBuilder: (context, url, progress) =>
+                        Image.asset(
+                      "assets/imagethumbnail.png",
+                      width: 100,
+                      height: 100,
+                    ),
+                    imageUrl: url,
                   ),
-                  imageUrl: url,
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(8.0),
+                  ),
+                  clipBehavior: Clip.hardEdge,
                 ),
-                borderRadius: BorderRadius.all(
-                  Radius.circular(8.0),
-                ),
-                clipBehavior: Clip.hardEdge,
-              ),
-              onPressed: null,
-              shape: new RoundedRectangleBorder(
-                  borderRadius: new BorderRadius.circular(8.0)),
-              borderSide: BorderSide(color: Colors.grey),
-              padding: EdgeInsets.all(0),
-            ),
+                onPressed: null,
+                style: OutlinedButton.styleFrom(
+                  shape: new RoundedRectangleBorder(
+                      borderRadius: new BorderRadius.circular(8.0)),
+                  side: BorderSide(color: Colors.grey),
+                  padding: EdgeInsets.all(0),
+                )),
             margin: EdgeInsets.only(left: 8, top: 3),
           ));
         }
@@ -922,27 +926,26 @@ static void openFile(File file,String url){
       attach.add(Container(
         width: 100,
         height: 100,
-        child: OutlineButton(
-          child: Material(
-            child: Image.asset(
-              subject != null
-                  ? getDefaultImageForMessage(subject)
-                  : "assets/imagethumbnail.png",
-              width: 100,
-              height: 100,
-              fit: BoxFit.cover,
+        child: OutlinedButton(
+            child: Material(
+              child: Image.asset(
+                "assets/imagethumbnail.png",
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+              ),
+              borderRadius: BorderRadius.all(
+                Radius.circular(8.0),
+              ),
+              clipBehavior: Clip.hardEdge,
             ),
-            borderRadius: BorderRadius.all(
-              Radius.circular(8.0),
-            ),
-            clipBehavior: Clip.hardEdge,
-          ),
-          onPressed: null,
-          shape: new RoundedRectangleBorder(
-              borderRadius: new BorderRadius.circular(8.0)),
-          borderSide: BorderSide(color: Colors.grey),
-          padding: EdgeInsets.all(0),
-        ),
+            onPressed: null,
+            style: OutlinedButton.styleFrom(
+              shape: new RoundedRectangleBorder(
+                  borderRadius: new BorderRadius.circular(8.0)),
+              side: BorderSide(color: Colors.grey),
+              padding: EdgeInsets.all(0),
+            )),
         margin: EdgeInsets.only(left: 8, top: 3),
       ));
     }
@@ -1007,37 +1010,40 @@ static void openFile(File file,String url){
       ),
       label: 'Resources',
     ));
-    list.add(BottomNavigationBarItem(
-      icon: Image.asset(
-        "assets/icons/users.png",
-        width: 24.0,
-        height: 24.0,
-      ),
-      label: 'Users',
-    ));
-    list.add(BottomNavigationBarItem(
+    if (Utils.userRole == 1) {
+      list.add(BottomNavigationBarItem(
+        icon: Image.asset(
+          "assets/icons/users.png",
+          width: 24.0,
+          height: 24.0,
+        ),
+        label: 'Users',
+      ));
+    }
+
+    /*list.add(BottomNavigationBarItem(
       icon: Image.asset(
         "assets/icons/faculty.png",
         width: 24.0,
         height: 24.0,
       ),
       label: 'Faculties',
-    ));
+    ));*/
 
     return list;
   }
 
   static Future<void> newResourceNotify() async {
     double currTime = new DateTime.now().millisecondsSinceEpoch.toDouble();
-    QuerySnapshot resource_notify = await Firestore.instance
+    QuerySnapshot resource_notify = await FirebaseFirestore.instance
         .collection('resource_time_audit')
-        .getDocuments();
-    List<DocumentSnapshot> resourceTimeList = await resource_notify.documents;
+        .get();
+    List<DocumentSnapshot> resourceTimeList = await resource_notify.docs;
     if (resourceTimeList != null && resourceTimeList.length == 1) {
-      Firestore.instance
+      FirebaseFirestore.instance
           .collection("resource_time_audit")
-          .document(resourceTimeList.first.documentID)
-          .updateData({
+          .doc(resourceTimeList.first.id)
+          .update({
         "last_created_time": currTime,
         "user": Utils.userId,
       });
@@ -1047,7 +1053,7 @@ static void openFile(File file,String url){
         await listItr.current.reference.delete();
       }
 
-      Firestore.instance.collection("resource_time_audit").add({
+      FirebaseFirestore.instance.collection("resource_time_audit").add({
         "last_created_time": currTime,
         "user": Utils.userId,
       });
@@ -1056,10 +1062,10 @@ static void openFile(File file,String url){
 
   static Future<void> isNewResourceAdded() async {
     final SharedPreferences localStore = await SharedPreferences.getInstance();
-    QuerySnapshot resource_notify = await Firestore.instance
+    QuerySnapshot resource_notify = await FirebaseFirestore.instance
         .collection('resource_time_audit')
-        .getDocuments();
-    List<DocumentSnapshot> resourceTimeList = await resource_notify.documents;
+        .get();
+    List<DocumentSnapshot> resourceTimeList = await resource_notify.docs;
     if (resourceTimeList != null && resourceTimeList.length > 0) {
       double resourceAddedTime = resourceTimeList.first["last_created_time"];
 
@@ -1072,14 +1078,14 @@ static void openFile(File file,String url){
 
         if (lastTime < resourceAddedTime) {
           localStore.setDouble("lastresourcecheck", currTime);
-          Fluttertoast.showToast(
+          /*.showToast(
               msg: "New resources added please checkout",
               toastLength: Toast.LENGTH_LONG,
               gravity: ToastGravity.BOTTOM,
               timeInSecForIosWeb: 3,
               backgroundColor: Colors.red,
               textColor: Colors.white,
-              fontSize: 16.0);
+              fontSize: 16.0);*/
         }
       }
     }
@@ -1111,11 +1117,11 @@ static void openFile(File file,String url){
   static Future<void> getAllUsersProfilePics() async {
     List<DocumentSnapshot> userDataRow = null;
     final QuerySnapshot allUsers =
-        await Firestore.instance.collection('userdata').getDocuments();
-    userDataRow = allUsers.documents;
+        await FirebaseFirestore.instance.collection('userdata').get();
+    userDataRow = allUsers.docs;
 
     for (int i = 0; i < userDataRow.length; i++) {
-      userProfilePictures[userDataRow[i].documentID] =
+      userProfilePictures[userDataRow[i].id] =
           userDataRow[i]["profile_pic_url"];
     }
   }
@@ -1125,5 +1131,14 @@ static void openFile(File file,String url){
     return id != null
         ? "https://img.youtube.com/vi/" + id + "/sddefault.jpg"
         : "https://i.stack.imgur.com/WFy1e.jpg";
+  }
+
+  static Future<String> uploadImageGetUrl(String path, File file) {
+    FirebaseStorage storage = FirebaseStorage.instance;
+    Reference ref = storage.ref().child(path);
+    UploadTask uploadTask = ref.putFile(file);
+    uploadTask.then((res) async {
+      return await res.ref.getDownloadURL();
+    });
   }
 }

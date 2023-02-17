@@ -28,26 +28,24 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
   TextEditingController editMessageController = new TextEditingController();
 
   Future<void> _addImage() async {
-    File selectedFile = await FilePicker.getFile(type: FileType.image);
+    FilePickerResult selectedFile =
+        await FilePicker.platform.pickFiles(type: FileType.image);
     if (selectedFile != null && this.mounted) {
       Utils.showLoadingPop(commonContext);
       final SharedPreferences localStore =
           await SharedPreferences.getInstance();
       List<Map> fileUrls = new List();
       String folderId = threadDetails["folderid"];
-      String fileName = selectedFile.path.split("/").last;
-      StorageReference storageReference = FirebaseStorage.instance
-          .ref()
-          .child('AvanaFiles/' + folderId + '/' + fileName);
-      StorageUploadTask uploadTask = storageReference.putFile(selectedFile);
-      await uploadTask.onComplete;
-      fileUrls.add({
-        "url": await storageReference.getDownloadURL(),
-        "name": fileName,
-        "type": fileName.split(".").last
-      });
+      String fileName = selectedFile.files.first.path.split("/").last;
 
-      await Firestore.instance.collection("comments").add({
+      String url = await Utils.uploadImageGetUrl(
+          'AvanaFiles/' + folderId + '/' + fileName,
+          File(selectedFile.files.first.path));
+
+      fileUrls.add(
+          {"url": url, "name": fileName, "type": fileName.split(".").last});
+
+      await FirebaseFirestore.instance.collection("comments").add({
         "comment": "",
         "created_time": new DateTime.now().millisecondsSinceEpoch,
         "owner": localStore.getString("userId"),
@@ -68,7 +66,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
       isCommentSaved = false;
       final SharedPreferences localStore =
           await SharedPreferences.getInstance();
-      await Firestore.instance.collection("comments").add({
+      await FirebaseFirestore.instance.collection("comments").add({
         "comment": commentEditor.text,
         "created_time": new DateTime.now().millisecondsSinceEpoch,
         "owner": localStore.getString("userId"),
@@ -92,13 +90,13 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
   }
 
   Future<void> getComments() async {
-    final QuerySnapshot userDetails = await Firestore.instance
+    final QuerySnapshot userDetails = await FirebaseFirestore.instance
         .collection('comments')
         //  .orderBy("comments")
         .where("thread_id", isEqualTo: threadID)
         .orderBy("created_time", descending: true)
-        .getDocuments();
-    commentsDoc = userDetails.documents;
+        .get();
+    commentsDoc = userDetails.docs;
     if (this.mounted) {
       setState(() {
         isCmntLoading = false;
@@ -237,8 +235,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
   }
 
   Widget buildMessageInfo() {
-    try{
-	return new Container(
+    return new Container(
         //  padding: EdgeInsets.only(
         //    left: medQry.size.width * .03, top: medQry.size.width * .04),
         child: Row(children: [
@@ -251,7 +248,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
               children: [
             SizedBox(
               width: medQry.size.width * .60,
-              child: Text(threadDetails['ownername'].toString(),
+              child: Text(threadDetails['ownername'].toString() ?? '',
                   softWrap: true,
                   style: TextStyle(
                       color: Colors.white,
@@ -259,7 +256,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
                       fontWeight: FontWeight.w600)),
             ),
             SizedBox(height: 3),
-            Text(Utils.getMessageTimerFrmt(threadDetails["created_time"]),
+            Text(Utils.getMessageTimerFrmt(threadDetails["created_time"]) ?? '',
                 style: TextStyle(
                     color: Colors.white70,
                     // fontStyle: FontStyle.italic,
@@ -267,10 +264,6 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
                     fontWeight: FontWeight.normal))
           ]))
     ]));
-}
-catch(Exception){
-return Container();
-}
   }
 
   Widget buildMessageContent() {
@@ -285,7 +278,7 @@ return Container();
               top: 8,
             ),
             child: new Text(
-              threadDetails["subject"],
+              threadDetails["subject"] ?? '',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             )),
         new Container(
@@ -294,7 +287,7 @@ return Container();
                 right: medQry.size.width * .02,
                 top: medQry.size.width * .05),
             child: Text(
-              "\t\t\t\t" + threadDetails["content"],
+              "     " + threadDetails["content"] ?? '',
               style: TextStyle(fontSize: 17),
             ))
       ],
@@ -332,9 +325,9 @@ return Container();
   }
 
   void deleteComment(String commentId) {
-    Firestore.instance.collection('comments').document(commentId).delete();
+    FirebaseFirestore.instance.collection('comments').doc(commentId).delete();
     setState(() {
-      Utils.updateCommentCount(threadDetails.documentID, false);
+      Utils.updateCommentCount(threadDetails.id, false);
     });
 
     Navigator.of(context).pop();
@@ -359,8 +352,7 @@ return Container();
                 children: [
                   Row(
                     children: <Widget>[
-                      (commentsDoc[i]["ownerrole"] == 1 ||
-                              commentsDoc[i]["ownerrole"] == 2)
+                      (commentsDoc[i]["ownerrole"] == 1)
                           ? Icon(
                               Icons.check_circle,
                               size: 16,
@@ -372,7 +364,7 @@ return Container();
                       SizedBox(
                           width: medQry.size.width * .61,
                           child: Text(
-                            commentsDoc[i]["owner_name"],
+                            commentsDoc[i]["owner_name"] ?? '',
                             style: TextStyle(color: Colors.black, fontSize: 18),
                           )),
                     ],
@@ -384,46 +376,48 @@ return Container();
                       ? Container(
                           width: medQry.size.width * .29,
                           height: medQry.size.width * .29,
-                          child: OutlineButton(
-                            child: Material(
-                              child: CachedNetworkImage(
-                                width: medQry.size.width * .29,
-                                height: medQry.size.width * .29,
-                                fit: BoxFit.contain,
-                                progressIndicatorBuilder:
-                                    (context, url, progress) => Image.asset(
-                                  "assets/imagethumbnail.png",
-                                  width: 100,
-                                  height: 100,
+                          child: OutlinedButton(
+                              child: Material(
+                                child: CachedNetworkImage(
+                                  width: medQry.size.width * .29,
+                                  height: medQry.size.width * .29,
+                                  fit: BoxFit.contain,
+                                  progressIndicatorBuilder:
+                                      (context, url, progress) => Image.asset(
+                                    "assets/imagethumbnail.png",
+                                    width: 100,
+                                    height: 100,
+                                  ),
+                                  imageUrl: commentsDoc[i]["attachment"][0]
+                                      ["url"],
                                 ),
-                                imageUrl: commentsDoc[i]["attachment"][0]
-                                    ["url"],
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(8.0),
+                                ),
+                                clipBehavior: Clip.hardEdge,
                               ),
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(8.0),
-                              ),
-                              clipBehavior: Clip.hardEdge,
-                            ),
-                            onPressed: () {
-                              Navigator.pushNamed(context, "/photoview",
-                                  arguments: {
-                                    "url": commentsDoc[i]["attachment"][0]
-                                        ["url"],
-                                    "name": commentsDoc[i]["attachment"][0]
-                                        ["name"]
-                                  });
-                            },
-                            shape: new RoundedRectangleBorder(
-                                borderRadius: new BorderRadius.circular(8.0)),
-                            borderSide: BorderSide(color: Colors.grey),
-                            padding: EdgeInsets.all(0),
-                          ),
+                              onPressed: () {
+                                Navigator.pushNamed(context, "/photoview",
+                                    arguments: {
+                                      "url": commentsDoc[i]["attachment"][0]
+                                          ["url"],
+                                      "name": commentsDoc[i]["attachment"][0]
+                                          ["name"]
+                                    });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                shape: new RoundedRectangleBorder(
+                                    borderRadius:
+                                        new BorderRadius.circular(8.0)),
+                                side: BorderSide(color: Colors.grey),
+                                padding: EdgeInsets.all(0),
+                              )),
                           margin: EdgeInsets.only(
                               left: medQry.size.width * .03,
                               top: medQry.size.width * .03),
                         )
                       : Text(
-                          "\t\t\t" + commentsDoc[i]["comment"],
+                          "     " + commentsDoc[i]["comment"],
                           style: TextStyle(
                               color: Colors.black87,
                               fontSize: 15,
@@ -439,7 +433,8 @@ return Container();
                                 alignment: Alignment.bottomLeft,
                                 child: Text(
                                   Utils.getTimeFrmt(
-                                      commentsDoc[i]["created_time"]),
+                                          commentsDoc[i]["created_time"]) ??
+                                      '',
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.black54,
@@ -460,7 +455,7 @@ return Container();
                                   ),
                                   onPressed: () {
                                     deleteCommentAlert(
-                                        context, commentsDoc[i].documentID);
+                                        context, commentsDoc[i].id);
                                   },
                                 )))
                       ],
@@ -491,10 +486,10 @@ return Container();
 
   Future<void> updateMessage() async {
     Utils.showLoadingPopText(context, "Updating the messsage");
-    await Firestore.instance
+    await FirebaseFirestore.instance
         .collection('Threads')
-        .document(threadID)
-        .updateData({
+        .doc(threadID)
+        .update({
       "content": editMessageController.text,
     });
     Navigator.pop(context);
@@ -606,8 +601,11 @@ return Container();
     userRole = localStore.getInt("role");
     Utils.removeNotifyItem(threadID);
     getComments();
-    threadDetails =
-        await Firestore.instance.collection('Threads').document(threadID).get();
+
+    threadDetails = await FirebaseFirestore.instance
+        .collection('Threads')
+        .doc(threadID)
+        .get();
     if (this.mounted) {
       setState(() {
         isLoading = false;
@@ -616,16 +614,14 @@ return Container();
   }
 
   void deleteThread(String threadId) async {
- if (this.mounted) {
-      setState(() {
-        isLoading = true;
-      });
-    }    
-List<dynamic> attachmentList = threadDetails["attachments"];
+    setState(() {
+      isLoading = true;
+    });
+    List<dynamic> attachmentList = threadDetails["attachments"];
     for (int i = 0; i < attachmentList.length; i++) {
       try {
-        StorageReference storageReference = await FirebaseStorage.instance
-            .getReferenceFromUrl(attachmentList[i]["url"]);
+        Reference storageReference =
+            await FirebaseStorage.instance.refFromURL(attachmentList[i]["url"]);
         storageReference.delete();
       } catch (e) {}
     }
@@ -636,21 +632,21 @@ List<dynamic> attachmentList = threadDetails["attachments"];
         List<dynamic> commnetattachmentList = commentsDoc[i]["attachment"];
         for (int i = 0; i < commnetattachmentList.length; i++) {
           try {
-            StorageReference storageReference = await FirebaseStorage.instance
-                .getReferenceFromUrl(commnetattachmentList[i]["url"]);
+            Reference storageReference = await FirebaseStorage.instance
+                .refFromURL(commnetattachmentList[i]["url"]);
             storageReference.delete();
           } catch (e) {}
         }
       }
 
-      Firestore.instance
+      FirebaseFirestore.instance
           .collection('comments')
-          .document(commentsDoc[i].documentID)
+          .doc(commentsDoc[i].id)
           .delete();
     }
-print(isLoading);
-         Navigator.pushReplacementNamed(context, "/messagePage"); 
-Firestore.instance.collection('Threads').document(threadId).delete();
+    Navigator.of(context).pop();
+    FirebaseFirestore.instance.collection('Threads').doc(threadId).delete();
+    Navigator.of(context).pop();
   }
 
   void deleteAlert(BuildContext context) {
@@ -701,7 +697,7 @@ Firestore.instance.collection('Threads').document(threadId).delete();
           title: isLoading ? Text("") : buildMessageInfo(),
           actions: <Widget>[
             (!isLoading &&
-                    (userId==threadDetails["owner"] && Utils.isDeleteAvail(threadDetails['created_time']) ||
+                    (Utils.isDeleteAvail(threadDetails['created_time']) ||
                         userRole == 1))
                 ? PopupMenuButton(
                     initialValue: 1,
@@ -756,9 +752,7 @@ Firestore.instance.collection('Threads').document(threadId).delete();
                           reverse: false,
                         ),
                       ),
-                      (userRole == 1 ||
-                              userRole == 2 ||
-                              userId == threadDetails["owner"])
+                      (userRole == 1 || userId == threadDetails["owner"])
                           ? buildInput()
                           : SizedBox(height: 10),
                     ],
