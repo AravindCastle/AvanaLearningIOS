@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
 
+import 'package:avana_academy/Utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -69,7 +70,12 @@ class _PhotoViewrState extends State<PhotoViewr> {
         actions: [
           IconButton(
               icon: Icon(Icons.download_sharp),
-              onPressed: () => {_download(arg["url"])})
+              onPressed: () => {
+                    if (Platform.isIOS)
+                      {Utils.openFile(arg["url"], arg["name"], context)}
+                    else
+                      {_download(arg["url"])}
+                  })
         ],
       ),
       body: Container(

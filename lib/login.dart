@@ -53,6 +53,8 @@ class _LoginPageState extends State<LoginPage> {
 
           int currDate = new DateTime.now().millisecondsSinceEpoch;
           prefs.setString("userId", Utils.userId);
+          prefs.setString("name", Utils.userName);
+          prefs.setInt("role", Utils.userRole);
 
           loadingPop.hide();
           Navigator.pushReplacementNamed(context, "/feed");
@@ -90,13 +92,13 @@ class _LoginPageState extends State<LoginPage> {
                     height: medQry.size.width * 0.3,
                   ),
                   Text(
-                    "Avana Surgical Systems Pvt Ltd",
+                    "Avana Learning app",
                     style: TextStyle(
                         color: Colors.black87,
                         fontSize: 22,
                         fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: medQry.size.height * 0.015),
+                  /*SizedBox(height: medQry.size.height * 0.015),
                   Text(
                     "Orthotics Learning App",
                     style: TextStyle(
@@ -104,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                         fontSize: 20,
                         fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: medQry.size.height * 0.1),
+                  SizedBox(height: medQry.size.height * 0.1),*/
                   TextField(
                     obscureText: false,
                     controller: emailField,
