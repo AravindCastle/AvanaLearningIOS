@@ -5,7 +5,6 @@ import 'dart:ui';
 import 'package:avana_academy/Utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:photo_view/photo_view.dart';
@@ -24,12 +23,12 @@ class _PhotoViewrState extends State<PhotoViewr> {
         _port.sendPort, 'downloader_send_port');
     _port.listen((dynamic data) {
       String id = data[0];
-      DownloadTaskStatus status = data[1];
+      //  DownloadTaskStatus status = data[1];
       int progress = data[2];
       setState(() {});
     });
 
-    FlutterDownloader.registerCallback(downloadCallback);
+    // FlutterDownloader.registerCallback(downloadCallback);
   }
 
   @override
@@ -38,6 +37,7 @@ class _PhotoViewrState extends State<PhotoViewr> {
     super.dispose();
   }
 
+/*
   @pragma('vm:entry-point')
   static void downloadCallback(
       String id, DownloadTaskStatus status, int progress) {
@@ -45,8 +45,9 @@ class _PhotoViewrState extends State<PhotoViewr> {
         IsolateNameServer.lookupPortByName('downloader_send_port');
     send.send([id, status, progress]);
   }
-
-  void _download(String url) async {
+*/
+  void _download(BuildContext context, String url) async {
+    /*
     final externalDir = await getExternalStorageDirectory();
 
     final id = await FlutterDownloader.enqueue(
@@ -55,7 +56,8 @@ class _PhotoViewrState extends State<PhotoViewr> {
       showNotification: true,
       openFileFromNotification: true,
       saveInPublicStorage: true,
-    );
+    );*/
+    Utils.openFile(url, "Image", context);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('Download started ...'),
     ));
@@ -70,12 +72,7 @@ class _PhotoViewrState extends State<PhotoViewr> {
         actions: [
           IconButton(
               icon: Icon(Icons.download_sharp),
-              onPressed: () => {
-                    if (Platform.isIOS)
-                      {Utils.openFile(arg["url"], arg["name"], context)}
-                    else
-                      {_download(arg["url"])}
-                  })
+              onPressed: () => {_download(context, arg["url"])})
         ],
       ),
       body: Container(

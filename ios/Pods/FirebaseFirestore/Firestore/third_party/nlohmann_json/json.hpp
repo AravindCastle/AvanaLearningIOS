@@ -2287,7 +2287,7 @@ JSON_HEDLEY_DIAGNOSTIC_POP
 /*!
 @brief macro
 @def NLOHMANN_DEFINE_TYPE_INTRUSIVE
-@since version 3.13.0
+@since version 3.9.0
 */
 #define NLOHMANN_DEFINE_TYPE_INTRUSIVE(Type, ...)  \
     friend void to_json(nlohmann::json& nlohmann_json_j, const Type& nlohmann_json_t) { NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_TO, __VA_ARGS__)) } \
@@ -2296,7 +2296,7 @@ JSON_HEDLEY_DIAGNOSTIC_POP
 /*!
 @brief macro
 @def NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE
-@since version 3.13.0
+@since version 3.9.0
 */
 #define NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Type, ...)  \
     inline void to_json(nlohmann::json& nlohmann_json_j, const Type& nlohmann_json_t) { NLOHMANN_JSON_EXPAND(NLOHMANN_JSON_PASTE(NLOHMANN_JSON_TO, __VA_ARGS__)) } \
@@ -2940,7 +2940,7 @@ struct ordered_map;
 
 This type preserves the insertion order of object keys.
 
-@since version 3.13.0
+@since version 3.9.0
 */
 using ordered_json = basic_json<nlohmann::ordered_map>;
 
@@ -10890,7 +10890,7 @@ class iter_impl
     @brief const copy constructor
     @param[in] other const iterator to copy from
     @note This copy constructor had to be defined explicitly to circumvent a bug
-          occurring on msvc v113.0 compiler (VS 2015) debug build. For more
+          occurring on msvc v19.0 compiler (VS 2015) debug build. For more
           information refer to: https://github.com/nlohmann/json/issues/1608
     */
     iter_impl(const iter_impl<const BasicJsonType>& other) noexcept
@@ -23128,7 +23128,7 @@ class basic_json
     @liveexample{The example below demonstrates the `parse()` function reading
     from a contiguous container.,parse__contiguouscontainer__parser_callback_t}
 
-    @since version 2.0.3 (contiguous containers); version 3.13.0 allowed to
+    @since version 2.0.3 (contiguous containers); version 3.9.0 allowed to
     ignore comments.
     */
     template<typename InputType>
@@ -23953,7 +23953,7 @@ class basic_json
     @since version 2.0.9; parameter @a start_index since 2.1.1; changed to
            consume input adapters, removed start_index parameter, and added
            @a strict parameter since 3.0.0; added @a allow_exceptions parameter
-           since 3.2.0; added @a tag_handler parameter since 3.13.0.
+           since 3.2.0; added @a tag_handler parameter since 3.9.0.
     */
     template<typename InputType>
     JSON_HEDLEY_WARN_UNUSED_RESULT

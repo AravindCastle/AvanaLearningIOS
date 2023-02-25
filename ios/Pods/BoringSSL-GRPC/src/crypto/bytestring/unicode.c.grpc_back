@@ -18,7 +18,7 @@
 
 
 static int is_valid_code_point(uint32_t v) {
-  // References in the following are to Unicode 13.0.0.
+  // References in the following are to Unicode 9.0.0.
   if (// The Unicode space runs from zero to 0x10ffff (3.4 D9).
       v > 0x10ffff ||
       // Values 0x...fffe, 0x...ffff, and 0xfdd0-0xfdef are permanently reserved

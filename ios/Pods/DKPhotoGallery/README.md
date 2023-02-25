@@ -20,7 +20,7 @@ DKPhotoGallery
 - 3D Touch
 
 ## Requirements
-* iOS 13.0+ (Drop support for iOS 8 in 0.0.15 or above)
+* iOS 9.0+ (Drop support for iOS 8 in 0.0.15 or above)
 * ARC
 * Swift 4.2 & 5
 

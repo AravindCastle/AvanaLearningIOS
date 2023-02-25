@@ -248,7 +248,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
               children: [
             SizedBox(
               width: medQry.size.width * .60,
-              child: Text(threadDetails['ownername'].toString() ?? '',
+              child: Text(threadDetails['ownername'].toString(),
                   softWrap: true,
                   style: TextStyle(
                       color: Colors.white,
@@ -256,7 +256,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
                       fontWeight: FontWeight.w600)),
             ),
             SizedBox(height: 3),
-            Text(Utils.getMessageTimerFrmt(threadDetails["created_time"]) ?? '',
+            Text(Utils.getMessageTimerFrmt(threadDetails["created_time"]),
                 style: TextStyle(
                     color: Colors.white70,
                     // fontStyle: FontStyle.italic,
@@ -278,7 +278,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
               top: 8,
             ),
             child: new Text(
-              threadDetails["subject"] ?? '',
+              threadDetails["subject"],
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             )),
         new Container(
@@ -287,7 +287,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
                 right: medQry.size.width * .02,
                 top: medQry.size.width * .05),
             child: Text(
-              "     " + threadDetails["content"] ?? '',
+              "     " + threadDetails["content"],
               style: TextStyle(fontSize: 17),
             ))
       ],
@@ -307,13 +307,23 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
                   textAlign: TextAlign.center,
                 ),
                 actions: <Widget>[
-                  FlatButton(
+                  TextButton(
+                    style: ButtonStyle(
+                        foregroundColor:
+                            MaterialStateProperty.all(Colors.white),
+                        backgroundColor: MaterialStateProperty.all(
+                            Color.fromRGBO(128, 0, 0, 1))),
                     child: Text('Cancel'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
                   ),
-                  FlatButton(
+                  TextButton(
+                    style: ButtonStyle(
+                        foregroundColor:
+                            MaterialStateProperty.all(Colors.white),
+                        backgroundColor: MaterialStateProperty.all(
+                            Color.fromRGBO(128, 0, 0, 1))),
                     child: Text('Delete'),
                     onPressed: () {
                       deleteComment(commentId);
@@ -364,7 +374,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
                       SizedBox(
                           width: medQry.size.width * .61,
                           child: Text(
-                            commentsDoc[i]["owner_name"] ?? '',
+                            commentsDoc[i]["owner_name"],
                             style: TextStyle(color: Colors.black, fontSize: 18),
                           )),
                     ],
@@ -433,8 +443,7 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
                                 alignment: Alignment.bottomLeft,
                                 child: Text(
                                   Utils.getTimeFrmt(
-                                          commentsDoc[i]["created_time"]) ??
-                                      '',
+                                      commentsDoc[i]["created_time"]),
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Colors.black54,
@@ -537,12 +546,22 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
                           height: 40,
                         ),
                         Row(children: [
-                          RaisedButton(
+                          TextButton(
+                            style: ButtonStyle(
+                                foregroundColor:
+                                    MaterialStateProperty.all(Colors.white),
+                                backgroundColor: MaterialStateProperty.all(
+                                    Color.fromRGBO(128, 0, 0, 1))),
                             onPressed: updateMessage,
                             child: Text("Edit"),
                           ),
                           Spacer(),
-                          RaisedButton(
+                          TextButton(
+                            style: ButtonStyle(
+                                foregroundColor:
+                                    MaterialStateProperty.all(Colors.white),
+                                backgroundColor: MaterialStateProperty.all(
+                                    Color.fromRGBO(128, 0, 0, 1))),
                             onPressed: () => {Navigator.pop(context)},
                             child: Text("Cancel"),
                           )
@@ -662,13 +681,23 @@ class _MessageViewScreenState extends State<MessageViewScreen> {
                   textAlign: TextAlign.center,
                 ),
                 actions: <Widget>[
-                  FlatButton(
+                  TextButton(
+                    style: ButtonStyle(
+                        foregroundColor:
+                            MaterialStateProperty.all(Colors.white),
+                        backgroundColor: MaterialStateProperty.all(
+                            Color.fromRGBO(128, 0, 0, 1))),
                     child: Text('Cancel'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
                   ),
-                  FlatButton(
+                  TextButton(
+                    style: ButtonStyle(
+                        foregroundColor:
+                            MaterialStateProperty.all(Colors.white),
+                        backgroundColor: MaterialStateProperty.all(
+                            Color.fromRGBO(128, 0, 0, 1))),
                     child: Text('Delete'),
                     onPressed: () {
                       deleteThread(threadID);

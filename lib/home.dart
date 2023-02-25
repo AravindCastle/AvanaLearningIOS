@@ -147,7 +147,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     if (Utils.isNewResourcesAdded) {
       Utils.isNewResourcesAdded = false;
-      /*Fluttertoast.showToast(
+      /* Fluttertoast.showToast(
           msg: "New resources added please checkout",
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.TOP,

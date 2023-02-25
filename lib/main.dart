@@ -19,8 +19,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flare_flutter/flare_actor.dart';
 import 'package:flare_splash_screen/flare_splash_screen.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
-//import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,10 +33,10 @@ import 'login.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await FlutterDownloader.initialize(
+  /*await FlutterDownloader.initialize(
       debug:
           true // optional: set to false to disable printing logs to console (default: true)
-      );
+      );*/
   runApp(AvanaHome());
 }
 
@@ -176,7 +174,7 @@ class AvanaHome extends StatelessWidget {
           ),
       home: SplashScreen.navigate(
         name: 'assets/splashScreen.flr',
-        next: (context) => AvanaHomePage(title: 'Avana Academy'),
+        next: (context) => AvanaHomePage(),
         until: () => Future.delayed(Duration(seconds: 1)),
         startAnimation: 'splash',
         loopAnimation: "splash",
@@ -203,7 +201,7 @@ class BackgroundNotify {
       Map<String, dynamic> message) {
     if (message["data"]["screen"] == "resource" &&
         Utils.userId != message["data"]["ownerId"]) {
-      /*.showToast(
+      /*   Fluttertoast.showToast(
           msg: "New resources added please checkout",
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.BOTTOM,
@@ -221,8 +219,8 @@ class BackgroundNotify {
 }
 
 class AvanaHomePage extends StatefulWidget {
-  AvanaHomePage({Key key, this.title}) : super(key: key);
-  final String title;
+  AvanaHomePage();
+  final String title = "Avana Academy";
 
   @override
   _AvanaHomePageState createState() => _AvanaHomePageState();
@@ -238,9 +236,6 @@ class _AvanaHomePageState extends State<AvanaHomePage> {
     // TODO: implement initState
     super.initState();
     checkUserLogged();
-    if (false) {
-      return;
-    }
     _fcm.subscribeToTopic(Utils.notifyTopic);
 
     if (Platform.isIOS) {
@@ -262,7 +257,7 @@ class _AvanaHomePageState extends State<AvanaHomePage> {
         setState(() {
           if (message.data["screen"] == "resource" &&
               Utils.userId != message.data["ownerId"]) {
-            /*Fluttertoast.showToast(
+            /*  Fluttertoast.showToast(
                 msg: "New resources added please checkout",
                 toastLength: Toast.LENGTH_LONG,
                 gravity: ToastGravity.BOTTOM,
@@ -286,7 +281,7 @@ class _AvanaHomePageState extends State<AvanaHomePage> {
         setState(() {
           if (message.data["screen"] == "resource" &&
               Utils.userId != message.data["ownerId"]) {
-            /*.showToast(
+            /*  Fluttertoast.showToast(
                 msg: "New resources added please checkout",
                 toastLength: Toast.LENGTH_LONG,
                 gravity: ToastGravity.BOTTOM,
@@ -321,6 +316,8 @@ class _AvanaHomePageState extends State<AvanaHomePage> {
         Utils.userEmail = userDetails.get("email");
         Utils.userId = userId;
 
+        isUserLogged =
+            (currDate - membershipDate) > 31540000000 ? false : activeState;
         isUserLogged = true;
       }
     }

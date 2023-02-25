@@ -88,7 +88,7 @@ class _MessagePageState extends State<MessagePage> {
                         ),
                         SizedBox(
                           width: medQry.size.width * .62,
-                          child: Text(messageDoc["ownername"] ?? '',
+                          child: Text(messageDoc["ownername"],
                               overflow: TextOverflow.fade,
                               softWrap: false,
                               style:
@@ -97,7 +97,7 @@ class _MessagePageState extends State<MessagePage> {
                         SizedBox(
                           width: medQry.size.width * .19,
                           child: Text(
-                            Utils.getTimeFrmt(messageDoc["created_time"]) ?? '',
+                            Utils.getTimeFrmt(messageDoc["created_time"]),
                             overflow: TextOverflow.ellipsis,
                             softWrap: true,
                             textAlign: TextAlign.right,
@@ -115,7 +115,7 @@ class _MessagePageState extends State<MessagePage> {
                           SizedBox(
                             width: medQry.size.width * .89,
                             child: Text(
-                              messageDoc["subject"] ?? '',
+                              messageDoc["subject"],
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               softWrap: true,
@@ -149,7 +149,7 @@ class _MessagePageState extends State<MessagePage> {
                               width: 200,
                               height: 70,
                               child: Text(
-                                messageDoc["content"] ?? '',
+                                messageDoc["content"],
                                 maxLines: 3,
                               ))
                         ],

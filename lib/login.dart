@@ -87,12 +87,13 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 children: [
                   Image.asset(
-                    "assets/loginbg.jpg",
+                    "assets/avanaloginlogo.png",
                     width: medQry.size.width * 0.7,
                     height: medQry.size.width * 0.3,
                   ),
+                  SizedBox(height: medQry.size.height * 0.015),
                   Text(
-                    "Avana Learning app",
+                    "Avana Learning App",
                     style: TextStyle(
                         color: Colors.black87,
                         fontSize: 22,
@@ -105,8 +106,8 @@ class _LoginPageState extends State<LoginPage> {
                         color: Colors.black87,
                         fontSize: 20,
                         fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: medQry.size.height * 0.1),*/
+                  ),*/
+                  SizedBox(height: medQry.size.height * 0.1),
                   TextField(
                     obscureText: false,
                     controller: emailField,
@@ -154,12 +155,12 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                       width: 200,
                       height: 40,
-                      child: RaisedButton(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: new BorderRadius.circular(10),
-                          ),
-                          color: Color.fromRGBO(128, 0, 0, 1),
-                          textColor: Colors.white,
+                      child: TextButton(
+                          style: ButtonStyle(
+                              foregroundColor:
+                                  MaterialStateProperty.all(Colors.white),
+                              backgroundColor: MaterialStateProperty.all(
+                                  Color.fromRGBO(128, 0, 0, 1))),
                           onPressed: () => handleSignIn(context),
                           child: Text("Log in"))),
                 ],
@@ -246,7 +247,7 @@ class _LoginPageState extends State<LoginPage> {
                           height: 60,
                           minWidth: 60,
                           buttonColor: Colors.red,
-                          child: RaisedButton(
+                          child: TextButton(
                               onPressed: () {
                                 handleSignIn(context);
                               },
